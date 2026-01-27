@@ -68,22 +68,16 @@ for _ in range(20):
 thumbRawSensorData = WeArtTrackingRawData(WeArtCommon.HandSide.Right, WeArtCommon.ActuationPoint.Thumb)
 client.AddMessageListener(thumbRawSensorData)
 
-# Activates raw data transmission
-
 client.StartRawData()
 ts = thumbRawSensorData.GetLastSample().timestamp
 while ts == 0:
     time.sleep(1)
     ts = thumbRawSensorData.GetLastSample().timestamp
-
 for _ in range (20):
     thumbSampleData = thumbRawSensorData.GetLastSample().data
-    
     thumb_acc = thumbSampleData.accelerometer
     thumb_gyro = thumbSampleData.gyroscope
-
     print(f"THUMB:\n\tAcc:\n\t\tX: {thumbSampleData.accelerometer.x}\n\t\tY: {thumbSampleData.accelerometer.y}\n\t\tZ: {thumbSampleData.accelerometer.z}\n\tGyro:\n\t\tX: {thumbSampleData.gyroscope.x}\n\t\tY: {thumbSampleData.gyroscope.y}\n\t\tZ: {thumbSampleData.gyroscope.z}")
-
     time.sleep(0.5)
 
 client.StopRawData()

@@ -53,13 +53,11 @@ if __name__ == '__main__':
 
     # Listener to receive data status from Middleware
     mwListener = MiddlewareStatusListener()
-    # Callback to print the status when changes
     mwListener.AddStatusCallback(mwStatusUpdateCallback)
     client.AddMessageListener(mwListener)
 
     # Listener to receive data status from Device(s)
     tdpListener = TDProStatusListener()
-    # Calllback to print the status when changes
     tdpListener.AddStatusCallback(tdProStatusUpdateCallback)
     client.AddMessageListener(tdpListener)
 
