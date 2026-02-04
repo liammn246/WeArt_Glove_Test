@@ -84,8 +84,6 @@ for _ in range(120):
     # Send closure values as [seq:uint8][thumb:uint8][index:uint8][middle:uint8][ring:uint8][pinky:uint8]
     pkt = struct.pack('!6B', seq, t, i, m, r, p)
     sock.sendto(pkt, (UDP_IP, UDP_PORT))
-
-    print(f"Sent seq {seq}: T{t} I{i} M{m} R{r} P{p}") ##ONLY FOR SLOW TESTING
     seq = (seq + 1) % 256
     time.sleep(0.5)
 
