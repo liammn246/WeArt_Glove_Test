@@ -6,6 +6,8 @@ from weartsdk.TDProStatusListener import TDProStatusListener
 from weartsdk.MiddlewareStatusListener import MiddlewareStatusListener
 import logging
 import time
+import socket
+import struct
 
 
 client = WeArtClient(WeArtCommon.DEFAULT_IP_ADDRESS, WeArtCommon.DEFAULT_TCP_PORT, log_level=logging.INFO)
@@ -50,29 +52,44 @@ client.AddThimbleTracking(annularThimbleTracking)
 pinkyThimbleTracking = WeArtThimbleTrackingObject(WeArtCommon.HandSide.Left, WeArtCommon.ActuationPoint.Pinky)
 client.AddThimbleTracking(pinkyThimbleTracking)
 
-# Print abduction and closure values for 60 seconds
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5005
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+seq = 0
+
+
+def closure_to_byte(val):
+    """
+    Map closure in [0.0, 1.0] to 0-255 (uint8). Clamp out-of-range or invalid values to 0..255.
+    """
+    # handles if the float is NaN, sets to safe value 0.0
+    if val != val:
+        val = 0.0
+    # Scales value to unsigned bit range of 0-255
+    b = int(round(val * 255.0))
+    return max(0, min(255, b))
+
 for _ in range(120):
-    print("THUMB CLOSURE: " + str(thumbThimbleTracking.GetClosure()) + ";  THUMB ABDUCTION: " + str(thumbThimbleTracking.GetAbduction()))
-    print("INDEX CLOSURE: " + str(indexThimbleTracking.GetClosure()))
-    print("MIDDLE CLOSURE: " + str(middleThimbleTracking.GetClosure()))
-    print("ANNULAR CLOSURE: " + str(annularThimbleTracking.GetClosure()))
-    print("PINKY CLOSURE: " + str(pinkyThimbleTracking.GetClosure()))
+    thumb_f = thumbThimbleTracking.GetClosure()
+    index_f = indexThimbleTracking.GetClosure()
+    middle_f = middleThimbleTracking.GetClosure()
+    ring_f = annularThimbleTracking.GetClosure()
+    pinky_f = pinkyThimbleTracking.GetClosure()
+    t = closure_to_byte(thumb_f)
+    i = closure_to_byte(index_f)
+    m = closure_to_byte(middle_f)
+    r = closure_to_byte(ring_f)
+    p = closure_to_byte(pinky_f)
+
+    # Send closure values as [seq:uint8][thumb:uint8][index:uint8][middle:uint8][ring:uint8][pinky:uint8]
+    pkt = struct.pack('!6B', seq, t, i, m, r, p)
+    sock.sendto(pkt, (UDP_IP, UDP_PORT))
+
+    print(f"Sent seq {seq}: T{t} I{i} M{m} R{r} P{p}") ##ONLY FOR SLOW TESTING
+    seq = (seq + 1) % 256
     time.sleep(0.5)
+
+sock.close()
 
 client.Stop()
 client.Close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
